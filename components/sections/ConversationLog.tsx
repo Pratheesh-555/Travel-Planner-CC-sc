@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Clock, Plane, Hotel, Utensils, MapPin, CheckCircle, Loader, AlertCircle } from "lucide-react"
@@ -51,6 +52,22 @@ const getStatusColor = (status: ConversationEntry["status"]) => {
 }
 
 export default function ConversationLog({ conversations }: ConversationLogProps) {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  const formatTime = (timestamp: Date) => {
+    if (!isClient) {
+      return "" // Return empty string during SSR
+    }
+    return timestamp.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
   return (
     <Card className="bg-white/90 backdrop-blur-sm border-sky-200 shadow-xl sticky top-8">
       <CardHeader>
@@ -95,10 +112,7 @@ export default function ConversationLog({ conversations }: ConversationLogProps)
 
               <div className="flex items-center justify-between mt-3 pt-2 border-t border-sky-100">
                 <span className="text-xs text-gray-500">
-                  {conversation.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {formatTime(conversation.timestamp)}
                 </span>
                 {conversation.status === "Processing" && (
                   <span className="text-xs text-blue-600 animate-pulse">Processing...</span>
