@@ -1,18 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import HeroBanner from "@/components/sections/HeroBanner"
-import VoiceAssistant from "@/components/sections/VoiceAssistant"
-import ConversationLog from "@/components/sections/ConversationLog"
-import QuickActions from "@/components/sections/QuickActions"
-import PersonalizedSuggestions from "@/components/sections/PersonalizedSuggestions"
-import QRSection from "@/components/sections/QRSection"
-import AdminDashboard from "@/components/sections/AdminDashboard"
-import ConfirmationPopup from "@/components/ui/ConfirmationPopup"
-import type { ConversationEntry, Suggestion } from "@/types"
+import { useState } from "react";
+import HeroBanner from "../components/sections/HeroBanner";
+import VoiceAssistant from "../components/sections/VoiceAssistant";
+import ConversationLog from "../components/sections/ConversationLog";
+import QuickActions from "../components/sections/QuickActions";
+import PersonalizedSuggestions from "../components/sections/PersonalizedSuggestions";
+import QRSection from "../components/sections/QRSection";
+import AdminDashboard from "../components/sections/AdminDashboard";
+import ConfirmationPopup from "../components/ui/ConfirmationPopup";
 
 export default function TravelPlannerApp() {
-  const [conversations, setConversations] = useState<ConversationEntry[]>([
+  const [conversations, setConversations] = useState([
     {
       id: 1,
       type: "Hotel",
@@ -37,9 +36,9 @@ export default function TravelPlannerApp() {
       status: "Processing",
       response: "Searching for romantic dining options...",
     },
-  ])
+  ]);
 
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([
+  const [suggestions, setSuggestions] = useState([
     {
       id: 1,
       type: "dining",
@@ -67,52 +66,47 @@ export default function TravelPlannerApp() {
       rating: 4.9,
       price: "€€€€",
     },
-  ])
+  ]);
 
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [confirmationMessage, setConfirmationMessage] = useState("")
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState("");
 
-  const addConversation = (newEntry: Omit<ConversationEntry, "id" | "timestamp">) => {
-    const entry: ConversationEntry = {
+  const addConversation = (newEntry) => {
+    const entry = {
       ...newEntry,
       id: Date.now(),
       timestamp: new Date(),
-    }
+    };
 
-    setConversations((prev) => [entry, ...prev.slice(0, 4)])
+    setConversations((prev) => [entry, ...prev.slice(0, 4)]);
 
-    // Show confirmation popup
-    setConfirmationMessage(getConfirmationMessage(newEntry.type))
-    setShowConfirmation(true)
+    setConfirmationMessage(getConfirmationMessage(newEntry.type));
+    setShowConfirmation(true);
 
-    // Auto-hide after 4 seconds
-    setTimeout(() => setShowConfirmation(false), 4000)
-  }
+    setTimeout(() => setShowConfirmation(false), 4000);
+  };
 
-  const getConfirmationMessage = (type: string): string => {
+  const getConfirmationMessage = (type) => {
     switch (type.toLowerCase()) {
       case "hotel":
-        return "Your hotel booking request has been processed!"
+        return "Your hotel booking request has been processed!";
       case "flight":
-        return "Flight information retrieved successfully!"
+        return "Flight information retrieved successfully!";
       case "dining":
-        return "Restaurant recommendations found!"
+        return "Restaurant recommendations found!";
       case "itinerary":
-        return "Your travel itinerary is being created!"
+        return "Your travel itinerary is being created!";
       default:
-        return "Your request has been processed!"
+        return "Your request has been processed!";
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-cream-50 to-gold-50">
-      {/* Hero Banner */}
       <HeroBanner />
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-4 gap-8">
-          {/* Left Column - Voice Assistant & Quick Actions */}
           <div className="lg:col-span-3 space-y-8">
             <VoiceAssistant onAddConversation={addConversation} />
             <QuickActions onAddConversation={addConversation} />
@@ -123,19 +117,17 @@ export default function TravelPlannerApp() {
             </div>
           </div>
 
-          {/* Right Column - Conversation Log */}
           <div className="lg:col-span-1">
             <ConversationLog conversations={conversations} />
           </div>
         </div>
       </div>
 
-      {/* Confirmation Popup */}
       <ConfirmationPopup
         show={showConfirmation}
         message={confirmationMessage}
         onClose={() => setShowConfirmation(false)}
       />
     </div>
-  )
+  );
 }
