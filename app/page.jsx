@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import HeroBanner from "../components/sections/HeroBanner";
-import VoiceAssistant from "../components/sections/VoiceAssistant";
+import VoiceAssistant, { OutboundCallForm } from "../components/sections/VoiceAssistant";
 import ConversationLog from "../components/sections/ConversationLog";
 import QuickActions from "../components/sections/QuickActions";
 import PersonalizedSuggestions from "../components/sections/PersonalizedSuggestions";
@@ -128,6 +128,8 @@ export default function TravelPlannerApp() {
         message={confirmationMessage}
         onClose={() => setShowConfirmation(false)}
       />
+
+      <OutboundCallForm />
     </div>
   );
 }

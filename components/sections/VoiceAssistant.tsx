@@ -18,37 +18,64 @@ export default function VoiceAssistant({ onAddConversation }: VoiceAssistantProp
   const [textInput, setTextInput] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const handleVoiceToggle = () => {
-    if (isProcessing) return
+  const handleVoiceToggle = async () => {
+    if (isProcessing) return;
 
     setIsListening(!isListening)
     if (!isListening) {
       setIsProcessing(true)
-      // Simulate voice recognition
-      setTimeout(() => {
-        setIsListening(false)
-        setIsProcessing(false)
+      try {
+        // Call your Next.js API route, which proxies to OmniDimension
+        const response = await fetch('/api/omnidimension');
+        const data = await response.json();
         onAddConversation({
           type: "Hotel",
           request: "Voice request: Find me a beachfront resort in Maldives for next month",
-          status: "Processing",
-          response: "Searching for beachfront resorts in Maldives...",
-        })
-      }, 3000)
+          status: "Completed",
+          response: JSON.stringify(data), // Replace with a user-friendly message if needed
+        });
+      } catch (error) {
+        onAddConversation({
+          type: "Hotel",
+          request: "Voice request: Find me a beachfront resort in Maldives for next month",
+          status: "Failed",
+          response: 'Failed to fetch from OmniDimension API',
+        });
+      } finally {
+        setIsListening(false)
+        setIsProcessing(false)
+      }
     }
   }
 
-  const handleTextSubmit = () => {
+  const handleTextSubmit = async () => {
     if (textInput.trim() && !isProcessing) {
-      setIsProcessing(true)
-      onAddConversation({
-        type: "Itinerary",
-        request: textInput,
-        status: "Processing",
-        response: "Processing your travel request...",
-      })
-      setTextInput("")
-      setTimeout(() => setIsProcessing(false), 2000)
+      setIsProcessing(true);
+      try {
+        const response = await fetch('/api/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: textInput }),
+        });
+        const data = await response.json();
+        const answer = data.choices?.[0]?.message?.content || 'No response from LLM';
+        onAddConversation({
+          type: "Itinerary",
+          request: textInput,
+          status: "Completed",
+          response: answer,
+        });
+      } catch (error) {
+        onAddConversation({
+          type: "Itinerary",
+          request: textInput,
+          status: "Failed",
+          response: "Failed to fetch from OpenAI API",
+        });
+      } finally {
+        setTextInput("");
+        setIsProcessing(false);
+      }
     }
   }
 
@@ -193,4 +220,63 @@ export default function VoiceAssistant({ onAddConversation }: VoiceAssistantProp
       </CardContent>
     </Card>
   )
+}
+
+export function OutboundCallForm() {
+  const [to, setTo] = useState("");
+  const [agentId, setAgentId] = useState("");
+  const [message, setMessage] = useState("");
+  const [result, setResult] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/omnidimension", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to, agent_id: agentId, message }),
+      });
+      const data = await res.json();
+      setResult(JSON.stringify(data, null, 2));
+    } catch (err) {
+      setResult("Error: " + (err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ margin: 20, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 400 }}>
+      <input
+        type="text"
+        placeholder="Phone number (to)"
+        value={to}
+        onChange={e => setTo(e.target.value)}
+        required
+        style={{ padding: 8 }}
+      />
+      <input
+        type="text"
+        placeholder="Agent ID"
+        value={agentId}
+        onChange={e => setAgentId(e.target.value)}
+        required
+        style={{ padding: 8 }}
+      />
+      <input
+        type="text"
+        placeholder="Message (optional)"
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        style={{ padding: 8 }}
+      />
+      <button type="submit" disabled={loading} style={{ padding: 10, background: '#2563eb', color: 'white', border: 'none', borderRadius: 4 }}>
+        {loading ? "Calling..." : "Start Call"}
+      </button>
+      {result && <pre style={{ marginTop: 16, background: '#f3f4f6', padding: 10, borderRadius: 4 }}>{result}</pre>}
+    </form>
+  );
 }
